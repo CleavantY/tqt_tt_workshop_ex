@@ -2,39 +2,81 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import cocotb
-from cocotb.clock import Clock
-from cocotb.triggers import ClockCycles
+from cocotb.triggers import Timer
+
+N = 4
+MASK = (1 << N) - 1
+SIGN = 1 << (N - 1)
+
+ADD, SUB, AND, OR, XOR, CMP, LSL, LSR = range(8)
+
+
+def model(a, b, op):
+    """Return (result, carry, zero, neg, ov) as the ALU should produce them."""
+    carry = 0
+    ov = 0
+    flag_val = 0
+
+    if op in (ADD, SUB, CMP):
+        b_eff = (~b & MASK) if op in (SUB, CMP) else b
+        cin = 1 if op in (SUB, CMP) else 0
+        full = a + b_eff + cin
+        diff = full & MASK
+        carry = (full >> N) & 1
+        ov = int((a & SIGN) == (b_eff & SIGN) and (diff & SIGN) != (a & SIGN))
+        result = 0 if op == CMP else diff
+        flag_val = diff
+    elif op == AND:
+        result = a & b
+        flag_val = result
+    elif op == OR:
+        result = a | b
+        flag_val = result
+    elif op == XOR:
+        result = a ^ b
+        flag_val = result
+    elif op == LSL:
+        result = (a << 1) & MASK
+        carry = (a >> (N - 1)) & 1
+        flag_val = result
+    else:  # LSR
+        result = a >> 1
+        carry = a & 1
+        flag_val = result
+
+    zero = int(flag_val == 0)
+    neg = (flag_val >> (N - 1)) & 1
+    return result, carry, zero, neg, ov
 
 
 @cocotb.test()
-async def test_project(dut):
+async def test_alu_exhaustive(dut):
     dut._log.info("Start")
-
-    # Set the clock period to 10 us (100 KHz)
-    clock = Clock(dut.clk, 10, unit="us")
-    cocotb.start_soon(clock.start())
-
-    # Reset
-    dut._log.info("Reset")
     dut.ena.value = 1
-    dut.ui_in.value = 0
-    dut.uio_in.value = 0
-    dut.rst_n.value = 0
-    await ClockCycles(dut.clk, 10)
     dut.rst_n.value = 1
+    dut.clk.value = 0
 
-    dut._log.info("Test project behavior")
+    errors = 0
+    for op in range(8):
+        for a in range(16):
+            for b in range(16):
+                dut.ui_in.value = a | (b << 4)
+                dut.uio_in.value = op
+                await Timer(10, units="ns")
 
-    # Set the input values you want to test
-    dut.ui_in.value = 20
-    dut.uio_in.value = 30
+                out = int(dut.uo_out.value)
+                got = (
+                    out & 0xF,
+                    (out >> 4) & 1,
+                    (out >> 5) & 1,
+                    (out >> 6) & 1,
+                    (out >> 7) & 1,
+                )
+                exp = model(a, b, op)
+                if got != exp:
+                    errors += 1
+                    dut._log.error(
+                        f"op={op} a={a:04b} b={b:04b}: got (res,C,Z,N,V)={got}, expected {exp}"
+                    )
 
-    # Wait for one clock cycle to see the output values
-    await ClockCycles(dut.clk, 1)
-
-    # The following assersion is just an example of how to check the output values.
-    # Change it to match the actual expected output of your module:
-    assert dut.uo_out.value == 50
-
-    # Keep testing the module by changing the input values, waiting for
-    # one or more clock cycles, and asserting the expected output values.
+    assert errors == 0, f"{errors} mismatches"

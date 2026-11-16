@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Your Name
+ * Copyright (c) 2024 
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -21,9 +21,24 @@ module tt_um_alu_4bit (
     input  wire       rst_n     // reset_n - low to reset
 );
 
+  alu_4bit #(.N(4)) u_alu (
+      .a         (ui_in[3:0]),
+      .b         (ui_in[7:4]),
+      .op        (uio_in[2:0]),
+      .result    (uo_out[3:0]),
+      .carry_out (uo_out[4]),
+      .zero      (uo_out[5]),
+      .neg       (uo_out[6]),
+      .ov        (uo_out[7])
+  );
 
+  // All bidirectional pins are inputs
+  assign uio_out = 8'b0;
+  assign uio_oe  = 8'b0;
 
   // List all unused inputs to prevent warnings
-  wire _unused = &{ena, clk, rst_n, 1'b0};
+  wire _unused = &{ena, clk, rst_n, uio_in[7:3], 1'b0};
 
 endmodule
+
+`default_nettype wire

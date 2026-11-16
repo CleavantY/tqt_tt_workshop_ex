@@ -13,7 +13,7 @@ Simple 4 bit ALU using these pins:
 
 ## How to test
 
-This is where you put how to test your design when your chip comes back. 
+This is where you put how to test your design when your chip comes back. For now to test it, have an external FPGA that would interface with the 8 input pins that input 2 4-bit vectors for a and b. Then measure the outputs at the end and grab the data via a serializer.
 
 ## External hardware
 
