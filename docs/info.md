@@ -9,12 +9,18 @@ You can also include images in this folder and reference them in the markdown. E
 
 ## How it works
 
-Explain how your project works
+Simple 4 bit ALU using these pins: 
 
 ## How to test
 
-Explain how to use your project
+This is where you put how to test your design when your chip comes back. 
 
 ## External hardware
 
-List external hardware used in your project (e.g. PMOD, LED display, etc), if any
+Any external hardware used to interface with the PCB once it comes back. 
+
+Options could include: 
+
+1. FPGA's 
+2. Microcontrollers (i.e. RP2040)
+3. Another hardware controller interface.
