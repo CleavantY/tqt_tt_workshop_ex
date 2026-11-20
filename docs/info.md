@@ -24,3 +24,8 @@ Options could include:
 1. FPGA's 
 2. Microcontrollers (i.e. RP2040)
 3. Another hardware controller interface.
+
+## comments:
+mess w only SOURCE and TEST
+
+within test: Makefile, tb.v test.py (tb in py)
