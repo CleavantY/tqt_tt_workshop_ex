@@ -90,8 +90,8 @@ module alu_4bit #(
     wire            is_arith = (op == ADD) | sub; 
 
     assign zero = (flag_v == {N{1'b0}}); 
-    assign neg = flag_v[N-1];              // if MSB if 1, it's a negative 
-    assign ov = is_arith & (a[N-1] == b_eff[N-1]) & (sum[N-1] != a[N-1]);
+    assign neg = flag_v[N-1];                                                   // if MSB if 1, it's a negative 
+    assign ov = is_arith & (a[N-1] == b_eff[N-1]) & (sum[N-1] != a[N-1]);       // update the overflow flags here 
 
 endmodule
 
